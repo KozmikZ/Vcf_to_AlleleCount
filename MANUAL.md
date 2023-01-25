@@ -2,7 +2,7 @@ Version 3 of the program.
 This is a program designed to convert large vcf files to csv/tsv files comparing **two** species. It will also create a **log** file, in which it will leave valuable statistics and data about the run. The file gets created in the running directory by default. Check parameters for more.
 Given indexes of the two sets columns, the program will create a table that counts alleles on each position with a format like this:
 
-##	CHROM	POS	set1_A	set1_C	set1_G	set1_T	set2_A	set2_C	set2_G	set2_T	diag
+###	CHROM	POS	set1_A	set1_C	set1_G	set1_T	set2_A	set2_C	set2_G	set2_T	diag
 
 A typical row in such a csv/tsv would look like this:
 ### cott-wg4-ch1	1204	0	6	0	2	0	4	0	0	0
