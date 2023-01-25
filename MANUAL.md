@@ -31,12 +31,16 @@ So lines like
 ### Needed:
 
 **inp** - Input file path. The *.vcf* you want to convert
+
 **outp** - Output file path. The *.csv* or *.tsv* you want to write to.
+
 **col1** - Indexes of the first species/set. The format is -> ex: 8,9,10,11
+
 **col2** - Indexes of the second species/set. The format is -> ex: 12,13,14
 
 
 ### Optional:
 
 **-s(--strict)** - Strict mode -> During strict mode, only reads which are diagnostic get written to the submitted output file. All other reads are skipped. The data type is a boolean. False by default.
+
 **-l(--log_location)** - Optional path to the log file. By default, the file gets created in the running directory.
