@@ -93,7 +93,7 @@ def convertomap(lst:list)->dict: # converts read line to a map
     for i in range(len(headers)):
         map[headers[i]]=lst[i]
     return map
-def singlecertain(nuc1:list,nuc2:list)->int: # if no nucleotides are shared within the two species for given read, return 1 - contrast is undeniably different
+def singlecertain(nuc1:list,nuc2:list)->int: # if no alleles are shared within the two species for given read, return 1 - contrast is undeniably different
     # nuc1 = [1,0,0,1] ex. value
     # is it diagnostic?
     bol = 1
@@ -108,7 +108,7 @@ def singlecertain(nuc1:list,nuc2:list)->int: # if no nucleotides are shared with
 def posread(set,col,line,alt_ref_list): # counting nucleotides in given columns for given animal
     setslice = []
     for i in col:
-        setslice.append((line[i],i)) # choosing the right columns alt_ref_listd on previously selected ones  
+        setslice.append((line[i],i)) # choosing the right columns alt_ref_list on previously selected ones  
     for sample_index in setslice: # all column values of the specific set
         sample = sample_index[0]
         col_index = sample_index[1]
@@ -149,7 +149,7 @@ while True:
 
             s1 = list(set1.values()) # the bool values of nucleotides for each set derived from tables of certainty
             s2 = list(set2.values())
-            diag = singlecertain(s1,s2) # determining, if the nucleotide is diagnostic
+            diag = singlecertain(s1,s2) # determining if the nucleotide is diagnostic
             if diag==True or strict==False:
                 output_bool_table_file.writerow([current_map["#CHROM"],current_map["POS"],*s1,*s2,diag,])
 
@@ -172,13 +172,3 @@ log.write(f"It converted {linecount-not_1_on_1-position_not_readable} reads in t
 log.write(f"{position_not_readable} lines had an unreadable nucleotide\n")
 
 
-#pozn - tenhle test_file ma indexy 9,10,11,12 a 13,14
-# python3 vcftobool-v-2.py /home/kozmiksans/UMG/MatchReadyProRyby/data/MERGE_ALL.vcf /home/kozmiksans/UMG/MatchReadyProRyby/outputdata/test_table.csv 9,10,11,12 13,14
-
-# haplotyp - cast chromozomuuu
-
-
-# TODO:
-# Find if you can solve ploid number for each sample -> column
-# ~ overit  data skrze puvodni soubor
-# put it on github
