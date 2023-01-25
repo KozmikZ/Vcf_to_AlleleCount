@@ -5,7 +5,7 @@ Given indexes of the two sets columns, the program will create a table that coun
 ##	CHROM	POS	set1_A	set1_C	set1_G	set1_T	set2_A	set2_C	set2_G	set2_T	diag
 
 A typical row in such a csv/tsv would look like this:
-# cott-wg4-ch1	1204	0	6	0	2	0	4	0	0	0
+### cott-wg4-ch1	1204	0	6	0	2	0	4	0	0	0
 
 
 
