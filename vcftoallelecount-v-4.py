@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import csv
 import traceback,os
 from zipfile import ZipFile
@@ -12,14 +13,14 @@ def higher(x,y):
     elif x<y:
         return y
 #METADATA
-VERSION = 4
+VERSION = "5.0"
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("inp",help="Path to the input file(vcf)")
 parser.add_argument("outp",help="Path to the output file(csv)")
-parser.add_argument("col1",help="Column indexes for set1")
-parser.add_argument("col2",help="Column indexes for set2")
+parser.add_argument("col1",help="Column names for set1")
+parser.add_argument("col2",help="Column names for set2")
 parser.add_argument("-l","--log_location",help = "Preferential log location")
 parser.add_argument("-s","--strict",action="store_true")
 args = parser.parse_args()
@@ -28,8 +29,8 @@ args = vars(args)
 
 readfile = args["inp"]
 writefile = args["outp"]
-contrastcolumns_1 = [int(i) for i in args["col1"].split(",")] # this black magic is used to change this "1,2,3" to this [1,2,3]
-contrastcolumns_2 = [int(i) for i in args["col2"].split(",")]
+contrastcolumns_1 = []
+contrastcolumns_2 = []
 optionallogpath= args["log_location"]
 strict = args["strict"]
 
@@ -85,6 +86,13 @@ while True: # getting to the start of the file
         break
 headers = read.split("\t")
 ploidity_table = {}
+n = 0
+for x in headers:
+	if x in args["col1"].split(","):
+		contrastcolumns_1.append(n)
+	elif x in args["col2"].split(","):
+		contrastcolumns_2.append(n)
+	n+=1
 
 def nextline()->list: # returns next line of reads as a list
     return main_vcf.readline().split("\t")
@@ -138,15 +146,14 @@ while True:
 
         if len(current_map["REF"])>1 or (len(current_map["ALT"])>1 and (current_map["ALT"][1]!="," or len(current_map["ALT"])!=3)): # skipping those not 1 on 1 -> but not A G,C, just A TTA
             not_1_on_1+=1
-        elif current_map["ALT"]=="N" or current_map["REF"]=="N": # skipping unreadable
+        elif current_map["ALT"]=="N" or current_map["REF"]=="N" or "*" in current_map["ALT"].split(","): # skipping unreadable
             position_not_readable+=1
         else:
-            alt_ref_list = [current_map["REF"],*current_map["ALT"].split(",")] 
+            alt_ref_list = [current_map["REF"],*current_map["ALT"].split(",")]
             set2 = {"A":0,"C":0,"G":0,"T":0} # tables of certainty - one for each set
             set1 = {"A":0,"C":0,"G":0,"T":0}
             posread(set1,contrastcolumns_1,line,alt_ref_list) # reading the columns and adding to set tables
             posread(set2,contrastcolumns_2,line,alt_ref_list)
-
             s1 = list(set1.values()) # the bool values of nucleotides for each set derived from tables of certainty
             s2 = list(set2.values())
             diag = singlecertain(s1,s2) # determining if the nucleotide is diagnostic
@@ -170,5 +177,3 @@ log.writelines(f"It skipped {not_1_on_1} reads, because their contrast was not 1
 log.writelines(f"{total_diag}: Number of diagnostic reads \n")
 log.write(f"It converted {linecount-not_1_on_1-position_not_readable} reads in total\n")
 log.write(f"{position_not_readable} lines had an unreadable nucleotide\n")
-
-
