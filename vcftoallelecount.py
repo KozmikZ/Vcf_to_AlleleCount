@@ -21,7 +21,7 @@ parser.add_argument("inp",help="Path to the input file(vcf)")
 parser.add_argument("outp",help="Path to the output file(csv)")
 parser.add_argument("col1",help="Column names for set1")
 parser.add_argument("col2",help="Column names for set2")
-parser.add_argument("-l","--log_location",help = "Preferential log location")
+parser.add_argument("-l","--log_location",help = "Preferential log location/directory")
 parser.add_argument("-s","--strict",action="store_true")
 args = parser.parse_args()
 args = vars(args)
@@ -33,7 +33,7 @@ contrastcolumns_1 = []
 contrastcolumns_2 = []
 optionallogpath= args["log_location"]
 strict = args["strict"]
-
+print(f"Starting vcftoallelecount version {VERSION}")
 
 if readfile[-4:]==".zip": # whether we should first unzip it
     fi = ZipFile(readfile)
@@ -45,7 +45,7 @@ elif readfile[-3:]==".gz":
     print("Unzippping gunzip file")
     main_vcf = gzip.open(readfile,mode="rt")
 else:
-    main_vcf = open(readfile,"r") # main data vcf file
+    main_vcf = open(readfile,"r",encoding='latin-1') # main data vcf file
 writeto = open(writefile,"w")
 output_bool_table_file = csv.writer(writeto,delimiter="\t")
 file_name = writefile.split("/")[-1] # name of the file
@@ -81,27 +81,37 @@ secs = int(time()) # variable to derive run time later
 ploid = None # is it haploid, triploid or more????
 
 while True: # getting to the start of the file
-    read = main_vcf.readline()
+    try:
+        read = main_vcf.readline()
+    except UnicodeDecodeError as e:
+        raise "Seems like there was a decoding error, are you using the correct encoding?"
     if read[0:2]!="##":
         break
 headers = read.split("\t")
 ploidity_table = {}
-n = 0
-for x in headers:
-	if x in args["col1"].split(","):
-		contrastcolumns_1.append(n)
-	elif x in args["col2"].split(","):
-		contrastcolumns_2.append(n)
-	n+=1
+
+cols1 : list = args["col1"].split(",")
+cols2 : list = args["col2"].split(",")
+
+for n,col in enumerate(headers):
+    if col in cols1:
+        contrastcolumns_1.append(n)
+        cols1.remove(col)
+    elif col in cols2:
+        contrastcolumns_2.append(n)
+        cols2.remove(col)
+
+if len(cols1)>0 or len(cols2)>0:
+    raise BaseException(f"Please correct your column names, the following were not found: {[*cols1,*cols2]} ")
 
 def nextline()->list: # returns next line of reads as a list
     return main_vcf.readline().split("\t")
-def convertomap(lst:list)->dict: # converts read line to a map
+def convert_to_map(lst:list)->dict: # converts read line to a map
     map = {}
     for i in range(len(headers)):
         map[headers[i]]=lst[i]
     return map
-def singlecertain(nuc1:list,nuc2:list)->int: # if no alleles are shared within the two species for given read, return 1 - contrast is undeniably different
+def single_certain(nuc1:list,nuc2:list)->int: # if no alleles are shared within the two species for given read, return 1 - contrast is undeniably different
     # nuc1 = [1,0,0,1] ex. value
     # is it diagnostic?
     bol = 1
@@ -120,6 +130,8 @@ def posread(set,col,line,alt_ref_list): # counting nucleotides in given columns 
     for sample_index in setslice: # all column values of the specific set
         sample = sample_index[0]
         col_index = sample_index[1]
+        if ploidity_table[col_index]>2: # quick fix should not be the way to do this. TODO
+            continue
         snps_list = sample[:ploidity_table[col_index]*2:2]# haplotypes of this sample
         for x in snps_list:
             if x==".":
@@ -142,7 +154,7 @@ while True:
         if len(line)==1:
             break
         linecount+=1
-        current_map = convertomap(line)
+        current_map = convert_to_map(line)
 
         if len(current_map["REF"])>1 or (len(current_map["ALT"])>1 and (current_map["ALT"][1]!="," or len(current_map["ALT"])!=3)): # skipping those not 1 on 1 -> but not A G,C, just A TTA
             not_1_on_1+=1
@@ -156,7 +168,7 @@ while True:
             posread(set2,contrastcolumns_2,line,alt_ref_list)
             s1 = list(set1.values()) # the bool values of nucleotides for each set derived from tables of certainty
             s2 = list(set2.values())
-            diag = singlecertain(s1,s2) # determining if the nucleotide is diagnostic
+            diag = single_certain(s1,s2) # determining if the nucleotide is diagnostic
             if diag==True or strict==False:
                 output_bool_table_file.writerow([current_map["#CHROM"],current_map["POS"],*s1,*s2,diag,])
 
@@ -177,3 +189,4 @@ log.writelines(f"It skipped {not_1_on_1} reads, because their contrast was not 1
 log.writelines(f"{total_diag}: Number of diagnostic reads \n")
 log.write(f"It converted {linecount-not_1_on_1-position_not_readable} reads in total\n")
 log.write(f"{position_not_readable} lines had an unreadable nucleotide\n")
+
