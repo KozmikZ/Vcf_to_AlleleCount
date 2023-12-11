@@ -7,6 +7,7 @@ import argparse
 from datetime import datetime
 from time import time
 import gzip
+import numpy as np
 def higher(x,y):
     if x>y:
         return x
@@ -66,8 +67,8 @@ log = open(pth,"w") # metadata and run data
 log.writelines(f"Starting program... version = {VERSION}\n")
 log.writelines(f"input file = {readfile}, input_file_size = {round(os.path.getsize(readfile)/1000000,2)}MB\n")
 log.writelines(f"output_file = {writefile}\n")
-log.writelines(f"columns of set1 = {contrastcolumns_1}\n")
-log.writelines(f"columns of set2 = {contrastcolumns_2}\n")
+log.writelines(f"columns of set1 = {args['col1'].split(',')}\n")
+log.writelines(f"columns of set2 = {args['col2'].split(',')}\n")
 log.writelines(f"Date of the run: {datetime.now()}\n")
 print(f"Starting program... input file = {readfile}, input_file_size = {round(os.path.getsize(readfile)/1000000,2)}MB, Strict mode={strict}")
 print(f"output_file = {writefile}")
@@ -124,6 +125,7 @@ def single_certain(nuc1:list,nuc2:list)->int: # if no alleles are shared within 
         total_diag+=1
     return bol
 def posread(set,col,line,alt_ref_list): # counting nucleotides in given columns for given animal
+    found = False
     setslice = []
     for i in col:
         setslice.append((line[i],i)) # choosing the right columns alt_ref_list on previously selected ones  
@@ -136,7 +138,9 @@ def posread(set,col,line,alt_ref_list): # counting nucleotides in given columns 
         for x in snps_list:
             if x==".":
                 continue
-            set[alt_ref_list[int(x)]]+=1 #  adding to the set table
+            set[alt_ref_list[int(x)]]=1 #  adding to the set table
+            found=True
+    return found
 
 output_bool_table_file.writerow(["CHROM","POS","set1_A","set1_C","set1_G","set1_T","set2_A","set2_C","set2_G","set2_T","diag"]) # headers in output
 # the first time we are kind of doing a do while loop here
