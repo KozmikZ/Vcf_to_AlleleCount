@@ -13,7 +13,7 @@ def higher(x,y):
     elif x<y:
         return y
 #METADATA
-VERSION = "5.0"
+VERSION = "5.1"
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
