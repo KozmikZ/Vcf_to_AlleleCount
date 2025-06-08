@@ -7,7 +7,6 @@ import argparse
 from datetime import datetime
 from time import time
 import gzip
-import numpy as np
 def higher(x,y):
     if x>y:
         return x
@@ -85,10 +84,11 @@ while True: # getting to the start of the file
     try:
         read = main_vcf.readline()
     except UnicodeDecodeError as e:
-        raise "Seems like there was a decoding error, are you using the correct encoding?"
+        raise ValueError("Seems like there was a decoding error, are you using the correct encoding?")
     if read[0:2]!="##":
         break
 headers = read.split("\t")
+headers[-1] = headers[-1][:-1] # removing the last character from the last header - it is a \n and would cause issues for column assignment
 ploidity_table = {}
 
 cols1 : list = args["col1"].split(",")
@@ -103,7 +103,7 @@ for n,col in enumerate(headers):
         cols2.remove(col)
 
 if len(cols1)>0 or len(cols2)>0:
-    raise BaseException(f"Please correct your column names, the following were not found: {[*cols1,*cols2]} ")
+    raise ValueError(f"Please correct your column names, the following were not found: {[*cols1,*cols2]} ")
 
 def nextline()->list: # returns next line of reads as a list
     return main_vcf.readline().split("\t")
